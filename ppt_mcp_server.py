@@ -6,7 +6,13 @@ Consolidated version with 20 tools organized into multiple modules.
 import os
 import argparse
 from typing import Dict, Any
-from mcp.server.fastmcp import FastMCP, Settings
+
+# Configure network binding before FastMCP construction so Pydantic settings pick it up
+if os.environ.get("PORT"):
+    os.environ.setdefault("FASTMCP_PORT", os.environ["PORT"])
+    os.environ.setdefault("FASTMCP_HOST", "0.0.0.0")
+
+from mcp.server.fastmcp import FastMCP
 
 # import utils  # Currently unused
 from tools import (
@@ -402,13 +408,11 @@ def get_server_info() -> Dict:
         ]
     }
 
-def main(transport: str = "stdio", port: int = 8000):
-    port = int(os.environ.get("PORT", port))
-    if transport in ("http", "sse"):
-        transport_name = "streamable-http" if transport == "http" else "sse"
-        settings = Settings(host="0.0.0.0", port=port)
-        app.settings = settings
-        app.run(transport=transport_name)
+def main(transport: str = "stdio"):
+    if transport == "http":
+        app.run(transport='streamable-http')
+    elif transport == "sse":
+        app.run(transport='sse')
     else:
         app.run(transport='stdio')
         
@@ -425,12 +429,5 @@ if __name__ == "__main__":
         help="Transport method for the MCP server (default: stdio)"
     )
 
-    parser.add_argument(
-        "-p",
-        "--port",
-        type=int,
-        default=8000,
-        help="Port to run the MCP server on (default: 8000)"
-    )
     args = parser.parse_args()
-    main(args.transport, args.port)
+    main(args.transport)
