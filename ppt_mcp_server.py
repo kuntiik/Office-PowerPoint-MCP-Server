@@ -25,8 +25,9 @@ from tools import (
 
 # Initialize the FastMCP server
 app = FastMCP(
-    name="powerpoint-mcp"
+    name="ppt-mcp-server"
 )
+
 
 # Global state to store presentations in memory
 presentations = {}
