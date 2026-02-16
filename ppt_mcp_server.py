@@ -408,13 +408,14 @@ def main(transport: str = "stdio", port: int = 8000):
         import asyncio
         # Set the port for HTTP transport
         app.settings.port = port
-        # CRITICAL FIX: Set host to 0.0.0.0 for Railway
+        # CRITICAL FIX 1: Listen on all interfaces
         app.settings.host = "0.0.0.0"  
+        # CRITICAL FIX 2: Trust the Railway URL (Wildcard)
+        app.settings.allowed_hosts = ["*"] 
         
         # Start the FastMCP server with HTTP transport
         try:
             # We use 'sse' transport here as it's the standard for remote connections
-            # ensuring it binds to the host we just set.
             app.run(transport='sse') 
         except asyncio.exceptions.CancelledError:
             print("Server stopped by user.")
