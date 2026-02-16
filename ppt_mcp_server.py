@@ -402,46 +402,46 @@ def get_server_info() -> Dict:
         ]
     }
 
-# ---- Main Function ----
-# ---- Main Function ----
-# ---- Main Function ----
-# ---- Main Function ----
 def main(transport: str = "stdio", port: int = 8000):
     if transport == "http":
         import uvicorn
-        import os
-
-        # 1. Configure the internal settings (for the parts that work)
-        # We explicitly set debug=True, which often relaxes security checks
-        app.settings.port = port
-        app.settings.debug = True 
         
-        # 2. Extract the internal Starlette application
-        # The library hides the app in private attributes, so we find it.
-        # We look for '_sse_app' (common) or '_app' (fallback).
+        # Extract the internal Starlette application
         starlette_app = getattr(app, "_sse_app", None) or getattr(app, "_app", None)
         
         if starlette_app:
             print(f"Starting Custom Uvicorn Server on port {port}...")
-            # 3. Run Uvicorn manually with 'forwarded_allow_ips'
-            # This is the 'Secret Sauce' that fixes the 502/Invalid Host error on Railway
+            # Run Uvicorn with forwarded_allow_ips to fix Railway host header issues
             uvicorn.run(
                 starlette_app, 
                 host="0.0.0.0", 
                 port=port, 
-                forwarded_allow_ips="*" 
+                forwarded_allow_ips="*"
             )
         else:
-            # Fallback if we can't find the internal app (shouldn't happen)
             print("Could not find internal app, falling back to default run.")
             app.run(transport='sse')
-
+    
     elif transport == "sse":
-        app.run(transport='sse')
+        # For SSE transport, use Uvicorn directly as well
+        import uvicorn
+        starlette_app = getattr(app, "_sse_app", None) or getattr(app, "_app", None)
         
+        if starlette_app:
+            print(f"Starting SSE Server on port {port}...")
+            uvicorn.run(
+                starlette_app,
+                host="0.0.0.0",
+                port=port,
+                forwarded_allow_ips="*"
+            )
+        else:
+            app.run(transport='sse')
+    
     else:
+        # For stdio, use the default run method
         app.run(transport='stdio')
-
+        
 if __name__ == "__main__":
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="MCP Server for PowerPoint manipulation using python-pptx")
