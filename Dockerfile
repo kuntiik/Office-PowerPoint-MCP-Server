@@ -13,7 +13,8 @@ COPY . .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose port if needed (not needed for stdio)
+# Expose default port for Railway port detection
+EXPOSE 8000
 
-# Set the entrypoint to run the MCP server
-ENTRYPOINT ["python", "ppt_mcp_server.py"]
+# Set the entrypoint to run the MCP server with SSE transport
+ENTRYPOINT ["python", "ppt_mcp_server.py", "--transport", "sse"]
