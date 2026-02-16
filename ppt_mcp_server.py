@@ -6,7 +6,7 @@ Consolidated version with 20 tools organized into multiple modules.
 import os
 import argparse
 from typing import Dict, Any
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP, Settings
 
 # import utils  # Currently unused
 from tools import (
@@ -404,20 +404,11 @@ def get_server_info() -> Dict:
 
 def main(transport: str = "stdio", port: int = 8000):
     port = int(os.environ.get("PORT", port))
-    if transport == "http":
-        import asyncio
-        try:
-            app.run(
-                transport='streamable-http',
-                host='0.0.0.0',
-                port=port
-            )
-        except KeyboardInterrupt:
-            print("Server stopped by user.")
-
-    elif transport == "sse":
-        app.run(transport='sse', host='0.0.0.0', port=port)
-
+    if transport in ("http", "sse"):
+        transport_name = "streamable-http" if transport == "http" else "sse"
+        settings = Settings(host="0.0.0.0", port=port)
+        app.settings = settings
+        app.run(transport=transport_name)
     else:
         app.run(transport='stdio')
         
